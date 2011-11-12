@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+import tarfile
+import tempfile
+import sys
+import logging
+import os
+import re
+import shutil
+
+logging.basicConfig(format="%(asctime)s %(message)s")
+LOG = logging.getLogger("root")
+LOG.setLevel(logging.INFO)
+
+OUTPUT = os.environ["OUTPUT"] if os.environ.has_key("OUTPUT") else "."
+
+
+def copy_legal_bits(src, dest):
+    for fname in ["CONTRIBUTORS", "NOTICE", "LICENSE", "DISCLAIMER"]:
+        shutil.copy(os.path.join(src, fname), dest)
+
+def repack_python(root, top, version):
+    exclude = lambda f: "Makefile" in f
+
+    LOG.info("Creating Python archive...")
+    package_name = "python-thrift_%s" % version
+    sub_dir = os.path.join("lib", "py")
+
+    copy_legal_bits(
+            os.path.join(root, top),
+            os.path.join(root, top, sub_dir))
+
+    shutil.copy(
+            os.path.join(root, top, "README"),
+            os.path.join(root, top, sub_dir, "README.Thrift"))
+
+    archive = tarfile.open(
+            os.path.join(OUTPUT, "%s.orig.tar.gz" % package_name),
+            "w:gz")
+    archive.add(
+            os.path.join(root, top, sub_dir),
+            arcname="%s.orig" % package_name,
+            exclude=exclude)
+    archive.close()
+
+    LOG.info("Created Python archive %s.orig.tar.gz", package_name)
+
+def repack_compiler(root, top):
+    LOG.info("Creating compiler archive...")
+    subdir = "compiler"
+
+def repack_java(root, top):
+    LOG.info("Creating Java archive...")
+    subdir = "java"
+
+get_toplevel = lambda p: p.split(os.sep)[0]
+
+def get_version(name):
+    match = re.match('.*thrift-(\d+\.\d+\.\d+).tar.gz', name)
+    return match.group(1) if match else None
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 1:
+        raise Exception("Usage: %s <tarfile>" % sys.argv[0])
+
+    name = sys.argv[1]
+    version = get_version(name)
+    root = tempfile.mkdtemp()
+
+    LOG.info("Using working directory %s", root)
+
+    tar = tarfile.open(name)
+    manifest = tar.getnames()
+
+    target = get_toplevel(manifest[0])
+    LOG.info("Extracting %s to %s", name, target)
+
+    tar.extractall(root)
+
+    repack_compiler(root, target)
+    repack_java(root, target)
+    repack_python(root, target, version)
+
+    LOG.info("Removing working directory")
+    shutil.rmtree(root)
