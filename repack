@@ -39,19 +39,41 @@ def repack_python(root, top, version):
             "w:gz")
     archive.add(
             os.path.join(root, top, sub_dir),
-            arcname="%s.orig" % package_name,
+            arcname=package_name,
             exclude=exclude)
     archive.close()
 
     LOG.info("Created Python archive %s.orig.tar.gz", package_name)
 
-def repack_compiler(root, top):
+def repack_compiler(root, top, version):
     LOG.info("Creating compiler archive...")
-    subdir = "compiler"
 
-def repack_java(root, top):
+
+def repack_java(root, top, version):
+    exclude = lambda f: "Makefile" in f
+    
     LOG.info("Creating Java archive...")
-    subdir = "java"
+    package_name = "libthrift-java_%s" % version
+    sub_dir = os.path.join("lib", "java")
+
+    copy_legal_bits(
+            os.path.join(root, top),
+            os.path.join(root, top, sub_dir))
+
+    shutil.copy(
+            os.path.join(root, top, "README"),
+            os.path.join(root, top, sub_dir, "README.Thrift"))
+
+    archive = tarfile.open(
+            os.path.join(OUTPUT, "%s.orig.tar.gz" % package_name),
+            "w:gz")
+    archive.add(
+            os.path.join(root, top, sub_dir),
+            arcname=package_name,
+            exclude=exclude)
+    archive.close()
+
+    LOG.info("Created Java archive %s.orig.tar.gz", package_name)
 
 get_toplevel = lambda p: p.split(os.sep)[0]
 
@@ -78,8 +100,8 @@ if __name__ == '__main__':
 
     tar.extractall(root)
 
-    repack_compiler(root, target)
-    repack_java(root, target)
+    repack_compiler(root, target, version)
+    repack_java(root, target, version)
     repack_python(root, target, version)
 
     LOG.info("Removing working directory")
