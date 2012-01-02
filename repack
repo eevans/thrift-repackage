@@ -48,6 +48,26 @@ def repack_python(root, top, version):
 def repack_compiler(root, top, version):
     LOG.info("Creating compiler archive...")
 
+    package_name = "thrift-compiler_%s" % version
+    sub_dir = "compiler"
+
+    copy_legal_bits(
+            os.path.join(root, top),
+            os.path.join(root, top, sub_dir))
+
+    shutil.copy(
+            os.path.join(root, top, "README"),
+            os.path.join(root, top, sub_dir, "README.Thrift"))
+
+    archive = tarfile.open(
+            os.path.join(OUTPUT, "%s.orig.tar.gz" % package_name),
+            "w:gz")
+    archive.add(
+            os.path.join(root, top, sub_dir),
+            arcname=package_name)
+    archive.close()
+
+    LOG.info("Created compiler archive %s.orig.tar.gz", package_name)
 
 def repack_java(root, top, version):
     exclude = lambda f: "Makefile" in f
