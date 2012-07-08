@@ -14,6 +14,10 @@ LOG.setLevel(logging.INFO)
 
 OUTPUT = os.environ["OUTPUT"] if os.environ.has_key("OUTPUT") else "."
 
+FILES_D = None
+if os.environ.has_key("FILES_D"): FILES_D = os.environ["FILES_D"]
+else: FILES_D = os.path.join(os.path.dirname(__file__), "files.d")
+
 
 def copy_legal_bits(src, dest):
     for fname in ["CONTRIBUTORS", "NOTICE", "LICENSE", "DISCLAIMER"]:
@@ -48,26 +52,33 @@ def repack_python(root, top, version):
 def repack_compiler(root, top, version):
     LOG.info("Creating compiler archive...")
 
-    package_name = "thrift-compiler_%s" % version
+    package_name = "thrift-compiler"
     sub_dir = "compiler"
 
     copy_legal_bits(
             os.path.join(root, top),
             os.path.join(root, top, sub_dir))
 
+    # Copy-in new top-level build
+    for f in ["Makefile.am", "configure.ac"]:
+        LOG.info("Copying %s into %s", f, package_name)
+        shutil.copy(
+                os.path.join(FILES_D, package_name, f),
+                os.path.join(root, top, sub_dir))
+
     shutil.copy(
             os.path.join(root, top, "README"),
             os.path.join(root, top, sub_dir, "README.Thrift"))
 
     archive = tarfile.open(
-            os.path.join(OUTPUT, "%s.orig.tar.gz" % package_name),
+            os.path.join(OUTPUT, "%s_%s.orig.tar.gz" % (package_name, version)),
             "w:gz")
     archive.add(
             os.path.join(root, top, sub_dir),
-            arcname=package_name)
+            arcname="%s_%s" % (package_name, version))
     archive.close()
 
-    LOG.info("Created compiler archive %s.orig.tar.gz", package_name)
+    LOG.info("Created compiler archive %s_%s.orig.tar.gz", package_name, version)
 
 def repack_java(root, top, version):
     exclude = lambda f: "Makefile" in f
