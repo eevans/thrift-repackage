@@ -54,6 +54,14 @@ def repack_compiler(root, top, version):
     package_name = "thrift-compiler"
     sub_dir = "compiler"
 
+    def exclude_files(f):
+        if f.endswith("Makefile.in"):
+            return True
+        for src in ["cpp/thriftl.cc", "cpp/thrifty.cc", "cpp/thrifty.h"]:
+            if f.endswith(src):
+                return True
+        return False
+
     copy_legal_bits(
             os.path.join(root, top),
             os.path.join(root, top, sub_dir))
@@ -75,7 +83,7 @@ def repack_compiler(root, top, version):
     archive.add(
             os.path.join(root, top, sub_dir),
             arcname="%s_%s" % (package_name, version),
-            exclude=lambda f: f.endswith("Makefile.in"))
+            exclude=exclude_files)
     archive.close()
 
     LOG.info("Created compiler archive %s_%s.orig.tar.gz", package_name, version)
