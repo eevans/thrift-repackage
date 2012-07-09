@@ -14,7 +14,6 @@ LOG.setLevel(logging.INFO)
 
 OUTPUT = os.environ["OUTPUT"] if os.environ.has_key("OUTPUT") else "."
 
-FILES_D = None
 if os.environ.has_key("FILES_D"): FILES_D = os.environ["FILES_D"]
 else: FILES_D = os.path.join(os.path.dirname(__file__), "files.d")
 
@@ -75,7 +74,8 @@ def repack_compiler(root, top, version):
             "w:gz")
     archive.add(
             os.path.join(root, top, sub_dir),
-            arcname="%s_%s" % (package_name, version))
+            arcname="%s_%s" % (package_name, version),
+            exclude=lambda f: f.endswith("Makefile.in"))
     archive.close()
 
     LOG.info("Created compiler archive %s_%s.orig.tar.gz", package_name, version)
