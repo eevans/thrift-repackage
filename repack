@@ -77,6 +77,15 @@ def repack_compiler(root, top, version):
             os.path.join(root, top, "README"),
             os.path.join(root, top, sub_dir, "README.Thrift"))
 
+    # Copy-in tutorial IDL files
+    os.makedirs(os.path.join(root, top, sub_dir, "tutorial"))
+    shutil.copy(
+            os.path.join(root, top, "tutorial", "tutorial.thrift"),
+            os.path.join(root, top, sub_dir, "tutorial", "tutorial.thrift"))
+    shutil.copy(
+            os.path.join(root, top, "tutorial", "shared.thrift"),
+            os.path.join(root, top, sub_dir, "tutorial", "shared.thrift"))
+
     archive = tarfile.open(
             os.path.join(OUTPUT, "%s_%s.orig.tar.gz" % (package_name, version)),
             "w:gz")
