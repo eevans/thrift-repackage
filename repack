@@ -130,11 +130,23 @@ def get_version(name):
     return match.group(1) if match else None
 
 
+PACKAGES_MAP = {
+    "python-thrift"    : repack_python,
+    "libthrift-java"   : repack_java,
+    "thrift-compiler"  : repack_compiler
+}
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 1:
-        raise Exception("Usage: %s <tarfile>" % sys.argv[0])
+    if len(sys.argv) < 2:
+        raise Exception("Usage: %s <tarfile> [component]" % sys.argv[0])
 
     name = sys.argv[1]
+    component = sys.argv[2] if len(sys.argv) > 2 else None
+
+    if component and (not component in PACKAGES_MAP.keys()):
+        raise Exception("Unknown component: \"%s\"" % component)
+
     version = get_version(name)
     root = tempfile.mkdtemp()
 
@@ -148,9 +160,11 @@ if __name__ == '__main__':
 
     tar.extractall(root)
 
-    repack_compiler(root, target, version)
-    repack_java(root, target, version)
-    repack_python(root, target, version)
+    if component:
+        PACKAGES_MAP[component](root, target, version)
+    else:
+        for func in PACKAGES_MAP.values():
+            func(root, target, version)
 
     LOG.info("Removing working directory")
     shutil.rmtree(root)
