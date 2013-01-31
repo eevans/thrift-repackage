@@ -1,6 +1,6 @@
 
 AC_PREREQ([2.65])
-AC_INIT([thrift], [0.8.0])
+AC_INIT([thrift], [0.9.0])
 #AM_CONFIG_SRCDIR([cpp/thrifty.h])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([config.h])
