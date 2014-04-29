@@ -20,7 +20,11 @@ else: FILES_D = os.path.join(os.path.dirname(__file__), "files.d")
 
 def copy_legal_bits(src, dest):
     for fname in ["CONTRIBUTORS", "NOTICE", "LICENSE", "DISCLAIMER"]:
-        shutil.copy(os.path.join(src, fname), dest)
+        path = os.path.join(src, fname)
+        if os.path.exists(path):
+            shutil.copy(path, dest)
+        else:
+            LOG.warn("%s file not found" % fname)
 
 def repack_python(root, top, version):
     exclude = lambda f: "Makefile" in f
